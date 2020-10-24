@@ -1,16 +1,89 @@
+use std::cmp::max;
 use std::io::{Read, stdin, stdout, Write};
+use std::ops::{Mul, Sub};
+use std::ops::Add;
 
 use termion::async_stdin;
 
+#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
 struct Point3D {
     x: i32,
     y: i32,
     z: i32,
 }
 
+impl Point3D {
+    fn abs(self) -> Point3D {
+        Point3D {
+            x: self.x.abs(),
+            y: self.y.abs(),
+            z: self.z.abs(),
+        }
+    }
+    fn new(x: i32, y: i32, z: i32) -> Point3D {
+        Point3D { x, y, z }
+    }
+}
+
+impl Sub for Point3D {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self {
+        Point3D {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+            z: self.z - rhs.z,
+        }
+    }
+}
+
+impl Mul for Point3D {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        Point3D {
+            x: self.x * rhs.x,
+            y: self.y * rhs.y,
+            z: self.z * rhs.z,
+        }
+    }
+}
+
+impl Add for Point3D {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        Point3D {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+            z: self.z + rhs.z,
+        }
+    }
+}
+
+type Angle = Point3D;
+
 struct Cube {
     coordinate: Point3D,
     size: i32,
+}
+
+struct Camera {
+    coordinate: Point3D,
+    angle: Angle,
+    fov: f64,
+}
+
+impl Camera {
+    fn ray_cast(&self, angle: (), cube: Cube) -> Option<i32> {
+        let mut start_point = self.coordinate;
+        let compare_helper = Point3D::new(2, 2, 2);
+        for i in 0..50 {
+            let ray_position = start_point + Point3D::new(1, 1, 1)
+            if start_point.abs() - cube.coordinate.abs() > compare_helper {
+                return Some(i);
+            };
+        }
+        None
+    }
 }
 
 fn calc_ray_angle(num: i8, half_size: i8, size_is_odd: bool, fov: f64) -> f64 {
@@ -27,15 +100,18 @@ fn main() {
     //let stdout = stdout();
     //let mut stdout = stdout.lock().into_raw_mode().unwrap();
     //let mut stdin = async_stdin().bytes();
-    let fov = 75.0;
+
+    let camera = Camera {
+        coordinate: Point3D::new(20, 20, 5),
+        angle: Angle::new(0, 0, 0),
+        fov: 75.0,
+    };
+
     let cube = Cube {
-        coordinate: Point3D {
-            x: 0,
-            y: 0,
-            z: 0,
-        },
+        coordinate: Point3D::new(0, 0, 0),
         size: 5,
     };
+
     loop {
         let (term_width, term_height) = termion::terminal_size().unwrap();
         let (term_width, term_height) = (term_width as i8, term_height as i8);
@@ -47,7 +123,7 @@ fn main() {
                     y,
                     half_height,
                     height_is_odd,
-                    fov / term_width * term_height,
+                    camera.fov / term_width as f64 * term_height as f64,
                 );
             for x in 1..term_width + 1 {
                 let x_ray_angle =
@@ -55,9 +131,11 @@ fn main() {
                         x,
                         half_width,
                         width_is_odd,
-                        fov,
+                        camera.fov,
                     );
-                //println!("y{} x_angle {} y_angle {}", y, x_ray_angle, y_ray_angle)
+                //А вот тут уже можно работать с лучами
+
+                println!("y{} x_angle {} y_angle {}", y, x_ray_angle, y_ray_angle)
             }
         }
     }
