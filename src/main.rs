@@ -1,70 +1,18 @@
 use std::cmp::max;
 use std::io::{Read, stdin, stdout, Write};
-use std::ops::{Mul, Sub};
-use std::ops::Add;
 
 use termion::async_stdin;
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Copy, Clone)]
-struct Point3D {
-    x: i32,
-    y: i32,
-    z: i32,
-}
+use crate::cube::Cube;
+use crate::point3d::Point3D;
 
-impl Point3D {
-    fn abs(self) -> Point3D {
-        Point3D {
-            x: self.x.abs(),
-            y: self.y.abs(),
-            z: self.z.abs(),
-        }
-    }
-    fn new(x: i32, y: i32, z: i32) -> Point3D {
-        Point3D { x, y, z }
-    }
-}
-
-impl Sub for Point3D {
-    type Output = Self;
-    fn sub(self, rhs: Self) -> Self {
-        Point3D {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-            z: self.z - rhs.z,
-        }
-    }
-}
-
-impl Mul for Point3D {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        Point3D {
-            x: self.x * rhs.x,
-            y: self.y * rhs.y,
-            z: self.z * rhs.z,
-        }
-    }
-}
-
-impl Add for Point3D {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self {
-        Point3D {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-            z: self.z + rhs.z,
-        }
-    }
-}
+mod bivector3;
+mod point3d;
+mod cube;
+mod vector3d;
 
 type Angle = Point3D;
 
-struct Cube {
-    coordinate: Point3D,
-    size: i32,
-}
 
 struct Camera {
     coordinate: Point3D,
@@ -73,14 +21,17 @@ struct Camera {
 }
 
 impl Camera {
-    fn ray_cast(&self, angle: (), cube: Cube) -> Option<i32> {
+    fn ray_cast(&self, variance: (i32, i32), cube: Cube) -> Option<i32> {
         let mut start_point = self.coordinate;
         let compare_helper = Point3D::new(2, 2, 2);
+
         for i in 0..50 {
-            let ray_position = start_point + Point3D::new(1, 1, 1)
-            if start_point.abs() - cube.coordinate.abs() > compare_helper {
-                return Some(i);
-            };
+            let ray_position = start_point + Point3D::new(1, 1, 1);
+            for &point in cube.plot().iter() {
+                if (ray_position - point).abs() > compare_helper {
+                    return Some(i);
+                };
+            }
         }
         None
     }
